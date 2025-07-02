@@ -43,22 +43,12 @@ function customtheme_advanced_theme_support() {
     add_theme_support('customize-selective-refresh-widgets');
 
     // Enable support for editor styles and load a custom editor stylesheet
-    add_theme_support('editor-styles');
     add_editor_style('editor-style.css');
 
     // Enable custom background support
     add_theme_support('custom-background', array(
         'default-color' => 'ffffff',
         'default-image' => '',
-    ));
-
-    // Enable custom header support
-    add_theme_support('custom-header', array(
-        'width'         => 1920,
-        'height'        => 600,
-        'flex-width'    => true,
-        'flex-height'   => true,
-        'header-text'   => false,
     ));
 
     // Add theme support for block styles (Gutenberg)
