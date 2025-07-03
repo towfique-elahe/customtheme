@@ -181,3 +181,134 @@ function customtheme_widgets_init() {
     ) );
 }
 add_action( 'widgets_init', 'customtheme_widgets_init' );
+
+
+/**
+ * Register Custom Post Type: Service
+ */
+function customtheme_register_service_post_type() {
+    $labels = array(
+        'name'                  => _x('Services', 'Post Type General Name', 'customtheme'),
+        'singular_name'         => _x('Service', 'Post Type Singular Name', 'customtheme'),
+        'menu_name'             => __('Services', 'customtheme'),
+        'name_admin_bar'        => __('Service', 'customtheme'),
+        'archives'              => __('Service Archives', 'customtheme'),
+        'attributes'            => __('Service Attributes', 'customtheme'),
+        'parent_item_colon'     => __('Parent Service:', 'customtheme'),
+        'all_items'             => __('All Services', 'customtheme'),
+        'add_new_item'          => __('Add Service', 'customtheme'),
+        'add_new'               => __('Add New', 'customtheme'),
+        'new_item'              => __('New Service', 'customtheme'),
+        'edit_item'             => __('Edit Service', 'customtheme'),
+        'update_item'           => __('Update Service', 'customtheme'),
+        'view_item'             => __('View Service', 'customtheme'),
+        'view_items'            => __('View Services', 'customtheme'),
+        'search_items'          => __('Search Service', 'customtheme'),
+        'not_found'             => __('Not service found', 'customtheme'),
+        'not_found_in_trash'    => __('Not service found in Trash', 'customtheme'),
+        'featured_image'        => __('Featured Image', 'customtheme'),
+        'set_featured_image'    => __('Set featured image', 'customtheme'),
+        'remove_featured_image' => __('Remove featured image', 'customtheme'),
+        'use_featured_image'    => __('Use as featured image', 'customtheme'),
+        'insert_into_item'      => __('Insert into service', 'customtheme'),
+        'uploaded_to_this_item' => __('Uploaded to this service', 'customtheme'),
+        'items_list'            => __('Services list', 'customtheme'),
+        'items_list_navigation' => __('Services list navigation', 'customtheme'),
+        'filter_items_list'     => __('Filter services list', 'customtheme'),
+    );
+
+    $args = array(
+        'label'                 => __('Service', 'customtheme'),
+        'description'           => __('Custom Post Type for Services', 'customtheme'),
+        'labels'                => $labels,
+        'supports'              => array('title', 'editor', 'excerpt', 'thumbnail', 'comments', 'revisions', 'author', 'custom-fields'),
+        'taxonomies'            => array('category', 'post_tag'),
+        'hierarchical'          => false,
+        'public'                => true,
+        'show_in_menu'          => true,
+        'menu_position'         => 5,
+        'menu_icon'             => 'dashicons-hammer', // Custom icon
+        'show_in_admin_bar'     => true,
+        'show_in_nav_menus'     => true,
+        'can_export'            => true,
+        'has_archive'           => true,
+        'exclude_from_search'   => false,
+        'publicly_queryable'    => true,
+        'show_in_rest'          => true, // Enables Gutenberg support
+        'capability_type'       => 'post',
+    );
+
+    register_post_type('service', $args);
+}
+add_action('init', 'customtheme_register_service_post_type');
+
+
+/**
+ * Add custom meta boxes to the 'service' post type.
+ */
+function customtheme_add_service_meta_boxes() {
+    add_meta_box(
+        'service_details_meta_box',       // ID
+        __('Service Details', 'customtheme'), // Title
+        'customtheme_render_service_meta_box', // Callback
+        'service',                        // Post type
+        'normal',                         // Context
+        'high'                            // Priority
+    );
+}
+add_action('add_meta_boxes', 'customtheme_add_service_meta_boxes');
+
+
+/**
+ * Render fields inside the meta box.
+ */
+function customtheme_render_service_meta_box($post) {
+    // Retrieve existing values
+    $short_description = get_post_meta($post->ID, '_service_short_description', true);
+    $price = get_post_meta($post->ID, '_service_price', true);
+
+    // Security nonce
+    wp_nonce_field('customtheme_save_service_meta_box', 'customtheme_service_meta_box_nonce');
+
+    ?>
+<p>
+    <label for="service_short_description"><strong><?php _e('Short Description', 'customtheme'); ?></strong></label><br>
+    <textarea id="service_short_description" name="service_short_description" rows="4"
+        style="width:100%;"><?php echo esc_textarea($short_description); ?></textarea>
+</p>
+
+<p>
+    <label for="service_price"><strong><?php _e('Price', 'customtheme'); ?></strong></label><br>
+    <input type="text" id="service_price" name="service_price" value="<?php echo esc_attr($price); ?>"
+        style="width:200px;" />
+</p>
+<?php
+}
+
+
+/**
+ * Save the custom meta box data.
+ */
+function customtheme_save_service_meta_box($post_id) {
+    // Security check
+    if (!isset($_POST['customtheme_service_meta_box_nonce']) || 
+        !wp_verify_nonce($_POST['customtheme_service_meta_box_nonce'], 'customtheme_save_service_meta_box')) {
+        return;
+    }
+
+    // Prevent autosave from triggering the update
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
+    // Check user capability
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    // Sanitize and save fields
+    if (isset($_POST['service_short_description'])) {
+        update_post_meta($post_id, '_service_short_description', sanitize_textarea_field($_POST['service_short_description']));
+    }
+
+    if (isset($_POST['service_price'])) {
+        update_post_meta($post_id, '_service_price', sanitize_text_field($_POST['service_price']));
+    }
+}
+add_action('save_post', 'customtheme_save_service_meta_box');
